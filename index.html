@@ -58,6 +58,24 @@ button.soft:disabled{opacity:.4;cursor:default}
 .next input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:0;border-radius:10px;padding:10px 12px}
 .link{background:none;border:0;color:var(--onplum);opacity:.7;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;padding:0;align-self:flex-start}
 
+/* daily three */
+.daily{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 14px 8px}
+.daily-head{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 6px}
+.daily-head h2{font-size:21px;margin:0}
+.daily-head span{font-size:13px;color:var(--muted)}
+.daily ul{list-style:none;margin:0;padding:0}
+.daily li label{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
+.daily li:first-child label{border-top:0}
+.daily .dt{flex:1;min-width:0}
+.daily .dt strong{display:block;font-weight:600}
+.daily .dt small{color:var(--muted);font-size:13px}
+.daily li.on .dt strong{color:var(--muted);text-decoration:line-through}
+.daily input{appearance:none;width:26px;height:26px;border:2px solid var(--muted);border-radius:8px;flex:none;display:grid;place-items:center;cursor:pointer;margin:0}
+.daily input:checked{background:var(--plum);border-color:var(--plum)}
+.daily input:checked::after{content:"";width:7px;height:12px;border:solid var(--onplum);border-width:0 2.5px 2.5px 0;transform:translate(0,-1px) rotate(45deg)}
+.daily li.first .dt strong::after{content:"#1";font-size:11px;font-weight:600;color:var(--plum);border:1px solid var(--plum);border-radius:999px;padding:0 6px;margin-left:8px;vertical-align:2px}
+.daily li.first.on .dt strong::after{opacity:.5}
+
 /* stats */
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
@@ -93,11 +111,16 @@ footer{color:var(--muted);font-size:13px;text-align:center}
     <p class="date" id="date"></p>
   </div>
 
+  <section class="daily" aria-labelledby="dailyH">
+    <div class="daily-head"><h2 id="dailyH">Daily three</h2><span id="dailyCount"></span></div>
+    <ul id="daily"></ul>
+  </section>
+
   <section class="today" id="today" aria-live="polite"></section>
 
   <div class="stats">
-    <div class="stat"><b id="streak">0</b><small>day streak</small></div>
-    <div class="stat"><b id="month">0</b><small>days this month</small></div>
+    <div class="stat"><b id="streak">0</b><small>day move streak</small></div>
+    <div class="stat"><b id="month">0</b><small>One Thing days this month</small></div>
   </div>
 
   <section>
@@ -156,8 +179,33 @@ function newDay(){
   save();
 }
 
+/* Daily three: every day, not part of the random pick. Moving is what keeps the streak alive. */
+const DAILY=[
+  {key:"move",name:"Move",hint:"10 min counts: a walk, a run, a stretch",first:true},
+  {key:"tidy",name:"Tidy",hint:"Your Tidy Rounds"},
+  {key:"connect",name:"Connect",hint:"One text or call counts"},
+];
+if(!state.dailyLog)state.dailyLog={}; // { "2026-10-21": ["move","tidy"] }
+const doneToday=()=>state.dailyLog[today()]||[];
+function renderDaily(){
+  const d=doneToday();
+  document.getElementById("daily").innerHTML=DAILY.map(x=>{
+    const on=d.includes(x.key);
+    return `<li class="${on?"on":""} ${x.first?"first":""}"><label>
+      <input type="checkbox" data-key="${x.key}" ${on?"checked":""}>
+      <span class="dt"><strong>${x.name}</strong><small>${x.hint}</small></span></label></li>`}).join("");
+  document.getElementById("dailyCount").textContent=d.length===3?"All three ✦":d.includes("move")?"Moved today: good day":`${d.length} of 3`;
+}
+document.getElementById("daily").addEventListener("change",e=>{
+  const k=e.target.dataset.key;if(!k)return;
+  const set=new Set(doneToday());
+  e.target.checked?set.add(k):set.delete(k);
+  if(set.size)state.dailyLog[today()]=[...set];else delete state.dailyLog[today()];
+  save();render();
+});
+
 function streak(){
-  const days=new Set(state.habits.flatMap(h=>h.log.map(l=>l.day)));
+  const days=new Set(Object.keys(state.dailyLog).filter(k=>state.dailyLog[k].includes("move")));
   let n=0,d=new Date();
   if(!days.has(ymd(d)))d.setDate(d.getDate()-1); // today not done yet doesn't break it
   while(days.has(ymd(d))){n++;d.setDate(d.getDate()-1)}
@@ -213,7 +261,7 @@ function renderHabits(){
 function render(){
   newDay();
   document.getElementById("date").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
-  renderToday();renderHabits();
+  renderDaily();renderToday();renderHabits();
   document.getElementById("streak").textContent=streak();
   document.getElementById("month").textContent=monthCount();
 }

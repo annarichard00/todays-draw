@@ -4,6 +4,8 @@ One habit or hobby a day, picked for you, so you don't have to decide. Open it, 
 
 ## What it does
 
+- **Daily three** at the top: Move (#1), Tidy, Connect. Check them off every day; they're not part of the random pick
+- Moving is what keeps your streak alive, so a rough day where you only moved still counts
 - Picks one habit each day. The longer since you last did something, the likelier it comes up, so nothing gets forgotten
 - ★ Focus habits come up about twice as often (star the 1–2 you most want to get better at)
 - One re-roll a day
