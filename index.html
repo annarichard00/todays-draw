@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One Thing</title>
+<meta name="description" content="One habit a day, picked for you. Just start.">
+<meta name="theme-color" content="#f6ede4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="One Thing">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f6ede4; --surface:#fffaf5; --ink:#2b1a24; --muted:#7a6470; --line:#e6d6ca;
+  --plum:#5b2a4a; --apricot:#f29e6b; --onplum:#fbefe6;
+  --display:"Fraunces", Georgia, serif;
+  --body:"Figtree", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1e1419; --surface:#2a1d24; --ink:#f3e6dc; --muted:#b39aa6; --line:#3d2b35;
+  --plum:#8e4a75; --apricot:#f4a77a; --onplum:#fbefe6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1e1419; --surface:#2a1d24; --ink:#f3e6dc; --muted:#b39aa6; --line:#3d2b35;
+  --plum:#8e4a75; --apricot:#f4a77a; --onplum:#fbefe6; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-tap-highlight-color:transparent}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.wrap{max-width:540px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.date{margin:0}
+
+/* today card */
+.today{background:var(--plum);color:var(--onplum);border-radius:22px;padding:22px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.today .eyebrow{color:var(--apricot)}
+.today h1{font-family:var(--display);font-weight:700;font-size:44px;line-height:1.02;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.mins{display:flex;align-items:center;gap:10px}
+.mins b{font-family:var(--display);font-weight:500;font-size:22px;font-variant-numeric:tabular-nums}
+.step{width:34px;height:34px;border-radius:50%;border:1px solid color-mix(in srgb,var(--onplum) 40%,transparent);background:none;color:var(--onplum);font-size:19px;line-height:1;cursor:pointer}
+.note{background:color-mix(in srgb,var(--onplum) 12%,transparent);border-radius:12px;padding:10px 12px;font-size:15px}
+.note span{opacity:.75;font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;display:block}
+.siri{font-size:15px;opacity:.85;margin:0}
+.siri q{font-style:italic}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button.big{font:inherit;font-weight:600;font-size:16px;border:0;border-radius:14px;padding:13px 18px;background:var(--apricot);color:#2b1a24;cursor:pointer;flex:1 1 140px}
+button.soft{font:inherit;font-weight:600;font-size:15px;border:1px solid color-mix(in srgb,var(--onplum) 40%,transparent);border-radius:14px;padding:12px 16px;background:none;color:var(--onplum);cursor:pointer;flex:1 1 120px}
+button.soft:disabled{opacity:.4;cursor:default}
+.done-msg{font-family:var(--display);font-size:22px;margin:0;line-height:1.25}
+.next{display:flex;gap:8px}
+.next input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:0;border-radius:10px;padding:10px 12px}
+.link{background:none;border:0;color:var(--onplum);opacity:.7;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;padding:0;align-self:flex-start}
+
+/* stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-family:var(--display);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat small{color:var(--muted);font-size:13px}
+
+/* habits list */
+h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0 0 4px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 10px}
+.habits{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.habits li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
+.habits li:first-child{border-top:0}
+.star{background:none;border:0;font-size:20px;cursor:pointer;color:var(--line);padding:0 2px;line-height:1}
+.star.on{color:var(--apricot)}
+.hname{min-width:0}
+.hname strong{display:block;font-weight:600;overflow-wrap:anywhere}
+.hname small{color:var(--muted);font-size:13px}
+.hmins{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--muted)}
+.hmins input{width:48px;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 6px;text-align:center}
+.x{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1}
+.x.confirm{color:#c0392b;font-size:13px;font-weight:600}
+.add{display:flex;gap:8px;margin-top:10px}
+.add input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.add .n{flex:0 0 64px}
+button.btn{font:inherit;font-weight:600;font-size:14px;border:0;border-radius:10px;padding:10px 14px;background:var(--plum);color:var(--onplum);cursor:pointer}
+footer{color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div>
+    <div class="eyebrow">One thing a day</div>
+    <p class="date" id="date"></p>
+  </div>
+
+  <section class="today" id="today" aria-live="polite"></section>
+
+  <div class="stats">
+    <div class="stat"><b id="streak">0</b><small>day streak</small></div>
+    <div class="stat"><b id="month">0</b><small>days this month</small></div>
+  </div>
+
+  <section>
+    <h2>Your habits</h2>
+    <p class="hint">★ = focus. Starred habits come up about twice as often. Anything you haven't done in a while gets more likely too.</p>
+    <ul class="habits" id="habits"></ul>
+    <form class="add" id="addForm">
+      <input id="newName" placeholder="Add a habit" aria-label="New habit name">
+      <input id="newMins" class="n" type="number" inputmode="numeric" min="1" max="180" value="10" aria-label="Minutes">
+      <button class="btn" type="submit">Add</button>
+    </form>
+  </section>
+
+  <footer>Everything saves on this phone.</footer>
+</main>
+
+<script>
+const KEY="oneThing.v1";
+const uid=()=>Math.random().toString(36).slice(2,9);
+const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const today=()=>ymd(new Date());
+const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const seed=()=>({habits:[
+  ["Flowstar",10],["DJing",20],["Ableton",20],["Meal prep",30],["Reading",15],["Breathwork",5]
+].map(([name,mins])=>({id:uid(),name,mins,focus:false,note:"",log:[]})),day:null});
+
+let state;
+try{state=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!state||!Array.isArray(state.habits))state=seed();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+
+const lastDone=h=>h.log.length?h.log[h.log.length-1].day:null;
+
+/* Weighted pick: the longer since you last did it, the likelier (caps at 2 weeks).
+   Never-done habits count as 2 weeks. Focus habits get double weight. */
+function pick(excludeId){
+  const pool=state.habits.filter(h=>h.id!==excludeId);
+  if(!pool.length)return null;
+  const t=today();
+  const w=pool.map(h=>{
+    const ld=lastDone(h);
+    const since=ld?Math.min(daysBetween(ld,t),14):14;
+    return (since+1)*(h.focus?2:1);
+  });
+  let r=Math.random()*w.reduce((a,b)=>a+b,0);
+  for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}
+  return pool[pool.length-1];
+}
+
+function newDay(){
+  if(state.day&&state.day.date===today()&&state.habits.some(h=>h.id===state.day.habitId))return;
+  const h=pick();
+  state.day=h?{date:today(),habitId:h.id,mins:h.mins,rerolled:false,done:null}:null;
+  save();
+}
+
+function streak(){
+  const days=new Set(state.habits.flatMap(h=>h.log.map(l=>l.day)));
+  let n=0,d=new Date();
+  if(!days.has(ymd(d)))d.setDate(d.getDate()-1); // today not done yet doesn't break it
+  while(days.has(ymd(d))){n++;d.setDate(d.getDate()-1)}
+  return n;
+}
+function monthCount(){
+  const m=today().slice(0,7);
+  return new Set(state.habits.flatMap(h=>h.log.filter(l=>l.day.startsWith(m)).map(l=>l.day))).size;
+}
+
+function renderToday(){
+  const el=document.getElementById("today");
+  const d=state.day,h=d&&state.habits.find(x=>x.id===d.habitId);
+  if(!h){el.innerHTML=`<div class="eyebrow">Today's one thing</div><p class="done-msg">Add a habit below and I'll pick one for you.</p>`;return}
+  if(d.done){
+    el.innerHTML=`<div class="eyebrow">Done for today ✦</div>
+      <h1>${esc(h.name)}</h1>
+      <p class="done-msg">${d.done} minute${d.done===1?"":"s"}. That counts. Go enjoy your day.</p>
+      <div class="actions"><button class="soft" data-act="more">I kept going (+10)</button></div>
+      <form class="next" data-act="note">
+        <input id="noteIn" placeholder="Next time, work on…" value="${esc(h.note)}" aria-label="What to work on next time">
+        <button class="big" style="flex:0 0 auto" type="submit">Save</button>
+      </form>
+      <button class="link" data-act="undo">Undo</button>`;
+    return;
+  }
+  el.innerHTML=`<div class="eyebrow">Today's one thing</div>
+    <h1>${esc(h.name)}</h1>
+    <div class="mins"><button class="step" data-act="minus" aria-label="Less time">−</button><b>${d.mins} min</b><button class="step" data-act="plus" aria-label="More time">+</button></div>
+    ${h.note?`<div class="note"><span>Work on</span>${esc(h.note)}</div>`:""}
+    <p class="siri">Say <q>Hey Siri, set a ${d.mins}-minute timer</q> and start.</p>
+    <div class="actions">
+      <button class="big" data-act="done">Done ✓</button>
+      <button class="soft" data-act="two">Rough day: did 2 min</button>
+      <button class="soft" data-act="reroll" ${d.rerolled||state.habits.length<2?"disabled":""}>${d.rerolled?"Re-roll used":"Re-roll (1 left)"}</button>
+    </div>`;
+}
+
+function renderHabits(){
+  const m=today().slice(0,7);
+  document.getElementById("habits").innerHTML=state.habits.map(h=>{
+    const n=h.log.filter(l=>l.day.startsWith(m)).length;
+    const ld=lastDone(h);
+    const ago=!ld?"not yet":ld===today()?"today":daysBetween(ld,today())===1?"yesterday":daysBetween(ld,today())+" days ago";
+    return `<li data-id="${h.id}">
+      <button class="star ${h.focus?"on":""}" data-act="star" aria-pressed="${h.focus}" aria-label="Focus on ${esc(h.name)}">★</button>
+      <div class="hname"><strong>${esc(h.name)}</strong><small>${n}× this month · last: ${ago}</small></div>
+      <label class="hmins"><input type="number" inputmode="numeric" min="1" max="180" value="${h.mins}" data-act="mins" aria-label="Default minutes for ${esc(h.name)}">min</label>
+      <button class="x ${h.confirm?"confirm":""}" data-act="rm" aria-label="Remove ${esc(h.name)}">${h.confirm?"Remove?":"×"}</button>
+    </li>`}).join("");
+}
+
+function render(){
+  newDay();
+  document.getElementById("date").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  renderToday();renderHabits();
+  document.getElementById("streak").textContent=streak();
+  document.getElementById("month").textContent=monthCount();
+}
+
+const todayHabit=()=>state.habits.find(x=>x.id===state.day?.habitId);
+function logToday(mins){
+  const h=todayHabit();if(!h)return;
+  h.log=h.log.filter(l=>l.day!==today());
+  h.log.push({day:today(),mins});
+  state.day.done=mins;
+}
+
+document.getElementById("today").addEventListener("click",e=>{
+  const act=e.target.closest("[data-act]")?.dataset.act,d=state.day;if(!act||!d)return;
+  if(act==="minus")d.mins=Math.max(2,d.mins-5);
+  else if(act==="plus")d.mins=Math.min(180,d.mins+5);
+  else if(act==="done")logToday(d.mins);
+  else if(act==="two")logToday(2);
+  else if(act==="more")logToday(d.done+10);
+  else if(act==="reroll"&&!d.rerolled){const h=pick(d.habitId);if(h){state.day={...d,habitId:h.id,mins:h.mins,rerolled:true}}}
+  else if(act==="undo"){const h=todayHabit();if(h)h.log=h.log.filter(l=>l.day!==today());d.done=null}
+  else return;
+  save();render();
+});
+document.getElementById("today").addEventListener("submit",e=>{
+  e.preventDefault();const h=todayHabit();if(!h)return;
+  h.note=document.getElementById("noteIn").value.trim();save();
+  const b=e.target.querySelector("button");b.textContent="Saved";setTimeout(()=>{b.textContent="Save"},1500);
+});
+
+const habitsEl=document.getElementById("habits");
+const rowHabit=e=>state.habits.find(h=>h.id===e.target.closest("[data-id]")?.dataset.id);
+habitsEl.addEventListener("click",e=>{
+  const act=e.target.closest("[data-act]")?.dataset.act,h=rowHabit(e);if(!h)return;
+  if(act==="star")h.focus=!h.focus;
+  else if(act==="rm"){
+    if(h.confirm){state.habits=state.habits.filter(x=>x!==h);if(state.day?.habitId===h.id)state.day=null}
+    else{h.confirm=true;setTimeout(()=>{delete h.confirm;renderHabits()},3000)}
+  } else return;
+  save();render();
+});
+habitsEl.addEventListener("change",e=>{
+  if(e.target.dataset.act!=="mins")return;const h=rowHabit(e);if(!h)return;
+  const v=Math.round(+e.target.value);if(v>=1&&v<=180){h.mins=v;save()}else e.target.value=h.mins;
+});
+document.getElementById("addForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const name=document.getElementById("newName").value.trim(),mins=Math.round(+document.getElementById("newMins").value)||10;
+  if(!name)return;
+  state.habits.push({id:uid(),name,mins:Math.min(180,Math.max(1,mins)),focus:false,note:"",log:[]});
+  document.getElementById("newName").value="";save();render();
+});
+
+setInterval(()=>{if(state.day?.date!==today())render()},30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+render();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+</script>
+</body>
+</html>
