@@ -9,6 +9,9 @@ One habit or hobby a day, picked for you, so you don't have to decide. Open it, 
 - Picks one habit each day. The longer since you last did something, the likelier it comes up, so nothing gets forgotten
 - ★ Focus habits come up about twice as often (star the 1–2 you most want to get better at)
 - One re-roll a day
+- After you finish, an optional **bonus spin** picks another one (as many as you want)
+- ✓ any habit in your list to log it, even if it wasn't the pick, so tomorrow's pick stays smart
+- **Graduate** a habit once it's automatic: it leaves the roulette and goes in your Graduated list (bring it back anytime)
 - Each habit has its own default minutes; nudge today's time up or down
 - Rough day? "Did 2 min" still counts and keeps your streak
 - "I kept going" adds 10 more minutes to today's log

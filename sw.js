@@ -1,6 +1,6 @@
 // Service worker: lets One Thing open even with no internet.
 // Bump VERSION whenever you change any file below so phones pick up the update.
-const VERSION = "ot-v2";
+const VERSION = "ot-v3";
 const FILES = [
   "./",
   "./index.html",
