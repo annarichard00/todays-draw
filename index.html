@@ -101,6 +101,8 @@ h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0 0 4px}
 .more{grid-column:1/-1;display:flex;gap:8px;padding-left:32px}
 .more button{font:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:7px 12px;cursor:pointer;background:none;border:1px solid var(--line);color:var(--ink)}
 .more .grad{border-color:var(--apricot)}
+.more{flex-wrap:wrap}
+.more .ren{flex:1 1 140px;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
 .more .rm.confirm{color:#c0392b;border-color:#c0392b}
 .grads{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .grads li{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--apricot);border-radius:999px;padding:6px 6px 6px 14px;font-size:15px}
@@ -184,7 +186,7 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 
   <section>
     <h2>Your habits</h2>
-    <p class="hint">★ = focus: comes up about twice as often. ✓ = did it today, even if it wasn't the pick. Tap a name to graduate or remove it.</p>
+    <p class="hint">★ = focus: comes up about twice as often. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
     <ul class="habits" id="habits"></ul>
     <form class="add" id="addForm">
       <input id="newName" placeholder="Add a habit" aria-label="New habit name">
@@ -375,7 +377,8 @@ function renderHabits(){
       <div class="hname" data-act="open" role="button" tabindex="0" aria-expanded="${!!h.open}"><strong>${esc(h.name)}</strong><small>${n}× this month · last: ${ago}</small></div>
       <label class="hmins"><input type="number" inputmode="numeric" min="1" max="180" value="${h.mins}" data-act="mins" aria-label="Default minutes for ${esc(h.name)}">min</label>
       <button class="did ${on?"on":""}" data-act="did" aria-pressed="${on}" aria-label="Did ${esc(h.name)} today">✓</button>
-      ${h.open?`<div class="more"><button class="grad" data-act="grad">Graduate ✦</button><button class="rm ${h.confirm?"confirm":""}" data-act="rm">${h.confirm?"Tap again to remove":"Remove"}</button></div>`:""}
+      ${h.open?(h.renaming?`<form class="more" data-act="renameForm"><input class="ren" value="${esc(h.name)}" aria-label="New name for ${esc(h.name)}" maxlength="60"><button class="grad" type="submit">Save</button><button type="button" data-act="renCancel">Cancel</button></form>`
+        :`<div class="more"><button data-act="rename">Rename</button><button class="grad" data-act="grad">Graduate ✦</button><button class="rm ${h.confirm?"confirm":""}" data-act="rm">${h.confirm?"Tap again to remove":"Remove"}</button></div>`):""}
     </li>`}).join("");
   const g=state.habits.filter(h=>h.graduated);
   document.getElementById("gradSec").hidden=!g.length;
@@ -421,17 +424,26 @@ habitsEl.addEventListener("click",e=>{
   const act=e.target.closest("[data-act]")?.dataset.act,h=rowHabit(e);if(!h||!act)return;
   const d=state.day;
   if(act==="star")h.focus=!h.focus;
-  else if(act==="open"){h.open=!h.open;delete h.confirm}
+  else if(act==="open"){h.open=!h.open;delete h.confirm;delete h.renaming}
   else if(act==="did"){
     if(loggedToday(h)){logHabit(h,0);if(d?.habitId===h.id)d.done=null}
     else{logHabit(h,h.mins);if(d?.habitId===h.id)d.done=h.mins;if(d?.bonusId===h.id)d.bonusId=null}
   }
+  else if(act==="rename"){h.renaming=true;delete h.confirm;renderHabits();const i=habitsEl.querySelector(`[data-id="${h.id}"] .ren`);if(i){i.focus();i.select()}return}
+  else if(act==="renCancel"){delete h.renaming}
   else if(act==="grad"){h.graduated=today();delete h.open;if(d&&d.habitId===h.id&&!d.done)state.day=null}
   else if(act==="rm"){
     if(h.confirm){state.habits=state.habits.filter(x=>x!==h);if(state.day?.habitId===h.id)state.day=null}
     else{h.confirm=true;setTimeout(()=>{delete h.confirm;renderHabits()},3000)}
   } else return;
   save();render();
+});
+habitsEl.addEventListener("submit",e=>{
+  if(e.target.dataset.act!=="renameForm")return;e.preventDefault();
+  const h=rowHabit(e);if(!h)return;
+  const v=e.target.querySelector(".ren").value.trim();
+  if(v)h.name=v;
+  delete h.renaming;delete h.open;save();render();
 });
 habitsEl.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.dataset.act==="open"){e.preventDefault();e.target.click()}});
 habitsEl.addEventListener("change",e=>{
