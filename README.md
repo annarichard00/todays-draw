@@ -1,6 +1,6 @@
-# One Thing
+# Today's Draw
 
-One habit or hobby a day, picked for you, so you don't have to decide. Open it, see today's thing, ask Siri for a timer, and start.
+One habit or hobby a day, drawn for you, so you don't have to decide. Open it, see today's thing, ask Siri for a timer, and start.
 
 ## What it does
 
@@ -17,7 +17,7 @@ One habit or hobby a day, picked for you, so you don't have to decide. Open it, 
 - "I kept going" adds 10 more minutes to today's log
 - After you finish, jot what to work on next time; it shows up the next time that habit comes up
 - Streak, days this month, and how often you've done each habit
-- Everything saves on the device
+- Everything saves on the device; **Backup & restore** at the bottom lets you copy it out and paste it back (for re-adding the app or a new phone)
 
 ## Files
 

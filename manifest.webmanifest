@@ -1,7 +1,7 @@
 {
-  "name": "One Thing",
-  "short_name": "One Thing",
-  "description": "One habit a day, picked for you. Just start.",
+  "name": "Today's Draw",
+  "short_name": "Today's Draw",
+  "description": "One habit a day, drawn for you. Just start.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

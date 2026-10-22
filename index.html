@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>One Thing</title>
-<meta name="description" content="One habit a day, picked for you. Just start.">
+<title>Today's Draw</title>
+<meta name="description" content="One habit a day, drawn for you. Just start.">
 <meta name="theme-color" content="#f6ede4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1e1419" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="One Thing">
+<meta name="apple-mobile-web-app-title" content="Today's Draw">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600&display=swap">
 <style>
@@ -114,13 +114,17 @@ h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0 0 4px}
 .add input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .add .n{flex:0 0 64px}
 button.btn{font:inherit;font-weight:600;font-size:14px;border:0;border-radius:10px;padding:10px 14px;background:var(--plum);color:var(--onplum);cursor:pointer}
+.backup{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.backup summary{cursor:pointer;font-weight:600}
+.backup .hint{margin:8px 0 0}
+.backup textarea{width:100%;margin-top:10px;font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}
 footer{color:var(--muted);font-size:13px;text-align:center}
 </style>
 </head>
 <body>
 <main class="wrap">
   <div>
-    <div class="eyebrow">One thing a day</div>
+    <div class="eyebrow">Today's Draw</div>
     <p class="date" id="date"></p>
   </div>
 
@@ -133,7 +137,7 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 
   <div class="stats">
     <div class="stat"><b id="streak">0</b><small>day move streak</small></div>
-    <div class="stat"><b id="month">0</b><small>One Thing days this month</small></div>
+    <div class="stat"><b id="month">0</b><small>draw days this month</small></div>
   </div>
 
   <section>
@@ -152,6 +156,14 @@ footer{color:var(--muted);font-size:13px;text-align:center}
     <p class="hint">Habits you've built. They're off the roulette. Bring one back if it slips.</p>
     <ul class="grads" id="grads"></ul>
   </section>
+
+  <details class="backup">
+    <summary>Backup &amp; restore</summary>
+    <p class="hint">Moving phones or re-adding the app? Copy a backup first, then paste it back here.</p>
+    <div class="add"><button class="btn" type="button" id="copyBk">Copy backup</button><span id="bkMsg" class="hint" style="margin:0;align-self:center"></span></div>
+    <textarea id="bkText" rows="3" placeholder="Paste a backup here" aria-label="Backup text"></textarea>
+    <div class="add"><button class="btn" type="button" id="restoreBk">Restore</button></div>
+  </details>
 
   <footer>Everything saves on this phone.</footer>
 </main>
@@ -267,7 +279,7 @@ function bonusBlock(){
 function renderToday(){
   const el=document.getElementById("today");
   const d=state.day,h=d&&todayHabit();
-  if(!h){el.innerHTML=`<div class="eyebrow">Today's one thing</div><p class="done-msg">Add a habit below and I'll pick one for you.</p>`;return}
+  if(!h){el.innerHTML=`<div class="eyebrow">You drew</div><p class="done-msg">Add a habit below and I'll pick one for you.</p>`;return}
   if(d.done){
     el.innerHTML=`<div class="eyebrow">Done for today ✦</div>
       <h1>${esc(h.name)}</h1>
@@ -281,7 +293,7 @@ function renderToday(){
       ${bonusBlock()}`;
     return;
   }
-  el.innerHTML=`<div class="eyebrow">Today's one thing</div>
+  el.innerHTML=`<div class="eyebrow">You drew</div>
     <h1>${esc(h.name)}</h1>
     <div class="mins"><button class="step" data-act="minus" aria-label="Less time">−</button><b>${d.mins} min</b><button class="step" data-act="plus" aria-label="More time">+</button></div>
     ${h.note?`<div class="note"><span>Work on</span>${esc(h.note)}</div>`:""}
@@ -370,6 +382,19 @@ document.getElementById("grads").addEventListener("click",e=>{
   if(e.target.dataset.act!=="back")return;const h=rowHabit(e);if(!h)return;
   delete h.graduated;save();render();
 });
+const bkMsg=t=>{const m=document.getElementById("bkMsg");m.textContent=t;setTimeout(()=>{m.textContent=""},3000)};
+document.getElementById("copyBk").addEventListener("click",async()=>{
+  const txt=JSON.stringify(state);
+  try{await navigator.clipboard.writeText(txt);bkMsg("Copied. Paste it in Notes to keep it safe.")}
+  catch(e){const t=document.getElementById("bkText");t.value=txt;t.select();bkMsg("Select all and copy the text below.")}
+});
+document.getElementById("restoreBk").addEventListener("click",()=>{
+  let s;try{s=JSON.parse(document.getElementById("bkText").value.trim())}catch(e){}
+  if(!s||!Array.isArray(s.habits)){bkMsg("That doesn't look like a backup.");return}
+  state=s;if(!state.dailyLog)state.dailyLog={};
+  save();document.getElementById("bkText").value="";render();bkMsg("Restored ✦");
+});
+
 document.getElementById("addForm").addEventListener("submit",e=>{
   e.preventDefault();
   const name=document.getElementById("newName").value.trim(),mins=Math.round(+document.getElementById("newMins").value)||10;
