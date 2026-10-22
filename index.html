@@ -118,6 +118,41 @@ button.btn{font:inherit;font-weight:600;font-size:14px;border:0;border-radius:10
 .backup summary{cursor:pointer;font-weight:600}
 .backup .hint{margin:8px 0 0}
 .backup textarea{width:100%;margin-top:10px;font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}
+/* tabs */
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;margin-top:-6px}
+.tabs button{flex:1;font:inherit;font-weight:600;font-size:15px;border:0;border-radius:999px;padding:9px 0;background:none;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--plum);color:var(--onplum)}
+.view{display:flex;flex-direction:column;gap:22px}
+
+/* calendar */
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 12px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head h2{margin:0;font-size:22px}
+.cal-nav{color:var(--ink);border-color:var(--line);font-size:22px}
+.cal-nav:disabled{opacity:.3;cursor:default}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow span{text-align:center;font-size:12px;font-weight:600;color:var(--muted);padding-bottom:4px}
+.cal-grid .d{aspect-ratio:1/1.15;border:0;border-radius:10px;background:none;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;padding:6px 0 0;min-width:0}
+.cal-grid .d b{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.cal-grid .d.has{background:color-mix(in srgb,var(--apricot) 14%,transparent)}
+.cal-grid .d.today b{color:var(--plum);text-decoration:underline;text-underline-offset:3px}
+.cal-grid .d.sel{outline:2px solid var(--plum);outline-offset:-2px}
+.cal-grid .d.future{color:var(--line);cursor:default}
+.marks{display:flex;flex-wrap:wrap;justify-content:center;gap:1px 2px;font-size:10px;line-height:1;max-width:100%}
+.mv{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--plum)}
+.cd{color:var(--apricot);font-style:normal}
+.cal-key{margin:10px 0 0;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.cal-key .cd{font-size:12px;margin-left:8px}
+.cal-day{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.cal-day h3{font-family:var(--display);font-weight:500;font-size:22px;margin:0 0 10px}
+.cal-day ul{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:6px}
+.cal-day li{display:flex;justify-content:space-between;gap:10px}
+.cal-day li small{color:var(--muted)}
+.cal-day .lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 6px}
+.cal-day li>span{flex:1}
+.pill{white-space:nowrap;font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px;background:var(--plum);color:var(--onplum)}
+.pill.bonus{background:var(--apricot);color:#2b1a24}
+.empty{color:var(--muted);margin:0}
 footer{color:var(--muted);font-size:13px;text-align:center}
 </style>
 </head>
@@ -127,6 +162,13 @@ footer{color:var(--muted);font-size:13px;text-align:center}
     <div class="eyebrow">Today's Draw</div>
     <p class="date" id="date"></p>
   </div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tabToday" aria-selected="true" data-view="today">Today</button>
+    <button role="tab" id="tabCal" aria-selected="false" data-view="cal">Calendar</button>
+  </nav>
+
+  <div class="view" id="viewToday">
 
   <section class="daily" aria-labelledby="dailyH">
     <div class="daily-head"><h2 id="dailyH">Daily three</h2><span id="dailyCount"></span></div>
@@ -164,6 +206,22 @@ footer{color:var(--muted);font-size:13px;text-align:center}
     <textarea id="bkText" rows="3" placeholder="Paste a backup here" aria-label="Backup text"></textarea>
     <div class="add"><button class="btn" type="button" id="restoreBk">Restore</button></div>
   </details>
+
+  </div>
+
+  <div class="view" id="viewCal" hidden>
+    <section class="cal">
+      <div class="cal-head">
+        <button class="step cal-nav" id="calPrev" aria-label="Previous month">‹</button>
+        <h2 id="calTitle"></h2>
+        <button class="step cal-nav" id="calNext" aria-label="Next month">›</button>
+      </div>
+      <div class="cal-grid cal-dow"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <p class="cal-key"><i class="mv"></i> moved <i class="cd">✦</i> a habit</p>
+    </section>
+    <section class="cal-day" id="calDay"></section>
+  </div>
 
   <footer>Everything saves on this phone.</footer>
 </main>
@@ -258,7 +316,8 @@ const byId=id=>state.habits.find(x=>x.id===id);
 const todayHabit=()=>byId(state.day?.habitId);
 function logHabit(h,mins){
   h.log=h.log.filter(l=>l.day!==today());
-  if(mins)h.log.push({day:today(),mins});
+  const kind=h.id===state.day?.habitId?"draw":h.id===state.day?.bonusId?"bonus":"extra";
+  if(mins)h.log.push({day:today(),mins,kind});
 }
 
 function bonusBlock(){
@@ -329,6 +388,7 @@ function render(){
   renderDaily();renderToday();renderHabits();
   document.getElementById("streak").textContent=streak();
   document.getElementById("month").textContent=monthCount();
+  if(!document.getElementById("viewCal").hidden)renderCal();
 }
 
 document.getElementById("today").addEventListener("click",e=>{
@@ -382,6 +442,61 @@ document.getElementById("grads").addEventListener("click",e=>{
   if(e.target.dataset.act!=="back")return;const h=rowHabit(e);if(!h)return;
   delete h.graduated;save();render();
 });
+/* Calendar: a collection of what you did. Empty days stay blank, no "missed" marks. */
+const now0=new Date();
+let calY=now0.getFullYear(),calM=now0.getMonth(),calSel=today();
+const DAILY_NAMES={move:"Move",tidy:"Tidy",connect:"Connect"};
+function dayInfo(day){
+  const daily=state.dailyLog[day]||[];
+  const habits=state.habits.flatMap(h=>h.log.filter(l=>l.day===day).map(l=>({name:h.name,mins:l.mins,kind:l.kind})));
+  const order={draw:0,bonus:1,extra:2};
+  habits.sort((a,b)=>(order[a.kind]??3)-(order[b.kind]??3));
+  return {daily,habits};
+}
+function renderCal(){
+  const first=new Date(calY,calM,1),days=new Date(calY,calM+1,0).getDate(),t=today();
+  document.getElementById("calTitle").textContent=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  document.getElementById("calNext").disabled=calY>new Date().getFullYear()||(calY===new Date().getFullYear()&&calM>=new Date().getMonth());
+  let html="";
+  for(let i=0;i<first.getDay();i++)html+=`<span></span>`;
+  for(let n=1;n<=days;n++){
+    const day=ymd(new Date(calY,calM,n)),future=day>t;
+    const {daily,habits}=dayInfo(day);
+    const k=habits.length;
+    const marks=(daily.includes("move")?`<i class="mv"></i>`:"")+(k>4?`<i class="cd">✦${k}</i>`:`<i class="cd">${"✦".repeat(k)}</i>`);
+    const has=daily.length||k;
+    html+=`<button class="d ${has?"has":""} ${day===t?"today":""} ${day===calSel?"sel":""} ${future?"future":""}" data-day="${day}" ${future?"disabled":""} aria-label="${new Date(day+"T12:00").toLocaleDateString(undefined,{month:"long",day:"numeric"})}${has?", "+(k?k+" habit"+(k>1?"s":""):"")+(daily.includes("move")?(k?", ":"")+"moved":""):""}"><b>${n}</b><span class="marks">${has?marks:""}</span></button>`;
+  }
+  document.getElementById("calGrid").innerHTML=html;
+  renderCalDay();
+}
+function renderCalDay(){
+  const {daily,habits}=dayInfo(calSel);
+  const title=calSel===today()?"Today":new Date(calSel+"T12:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  let html=`<h3>${title}</h3>`;
+  if(!daily.length&&!habits.length){html+=`<p class="empty">Nothing logged. Rest days are part of it too.</p>`}
+  else{
+    if(daily.length)html+=`<p class="lbl">Daily three</p><ul>${["move","tidy","connect"].filter(x=>daily.includes(x)).map(x=>`<li><span>${DAILY_NAMES[x]} ✓</span></li>`).join("")}</ul>`;
+    if(habits.length){
+      const total=habits.reduce((a,h)=>a+h.mins,0);
+      html+=`<p class="lbl">Habits · ${total} min</p><ul>${habits.map(h=>`<li><span>${esc(h.name)}${h.kind==="draw"?`<span class="pill">the draw</span>`:h.kind==="bonus"?`<span class="pill bonus">bonus</span>`:""}</span><small>${h.mins} min</small></li>`).join("")}</ul>`;
+    }
+  }
+  document.getElementById("calDay").innerHTML=html;
+}
+document.getElementById("calGrid").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(!b||b.disabled)return;calSel=b.dataset.day;renderCal()});
+document.getElementById("calPrev").addEventListener("click",()=>{calM--;if(calM<0){calM=11;calY--}renderCal()});
+document.getElementById("calNext").addEventListener("click",()=>{calM++;if(calM>11){calM=0;calY++}renderCal()});
+document.querySelector(".tabs").addEventListener("click",e=>{
+  const v=e.target.closest("[data-view]")?.dataset.view;if(!v)return;
+  document.getElementById("viewToday").hidden=v!=="today";
+  document.getElementById("viewCal").hidden=v!=="cal";
+  document.getElementById("tabToday").setAttribute("aria-selected",v==="today");
+  document.getElementById("tabCal").setAttribute("aria-selected",v==="cal");
+  if(v==="cal"){const n=new Date();calY=n.getFullYear();calM=n.getMonth();calSel=today();renderCal()}
+  window.scrollTo(0,0);
+});
+
 const bkMsg=t=>{const m=document.getElementById("bkMsg");m.textContent=t;setTimeout(()=>{m.textContent=""},3000)};
 document.getElementById("copyBk").addEventListener("click",async()=>{
   const txt=JSON.stringify(state);
