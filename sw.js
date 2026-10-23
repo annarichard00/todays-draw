@@ -1,6 +1,6 @@
 // Service worker: lets Today's Draw open even with no internet.
 // Bump VERSION whenever you change any file below so phones pick up the update.
-const VERSION = "ot-v7";
+const VERSION = "ot-v8";
 const FILES = [
   "./",
   "./index.html",

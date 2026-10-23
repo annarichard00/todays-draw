@@ -62,7 +62,22 @@ button.soft:disabled{opacity:.4;cursor:default}
 .daily{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 14px 8px}
 .daily-head{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 6px}
 .daily-head h2{font-size:21px;margin:0}
-.daily-head span{font-size:13px;color:var(--muted)}
+.daily-head span{font-size:13px;color:var(--muted);flex:1;text-align:right;padding-right:10px}
+.daily-head{align-items:center}
+.dedit{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.daily li:first-child .dedit{border-top:0}
+.dedit .fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.dedit input{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.dedit input.h{font-size:13px;color:var(--muted)}
+.dedit .x{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer;padding:2px 8px;line-height:1;width:44px}
+.dedit .lock{font-size:11px;line-height:1.2;color:var(--muted);width:44px;text-align:center;flex:none}
+.dadd{display:flex;gap:8px;padding:10px 0 6px;border-top:1px solid var(--line)}
+.dadd input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.idea{background:var(--apricot);color:#2b1a24;border-radius:12px;padding:10px 12px;font-size:15px;display:flex;flex-direction:column;gap:6px}
+.idea span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;opacity:.7}
+.idea button{align-self:flex-start;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;text-decoration:underline;color:#2b1a24;cursor:pointer}
+.more textarea{flex:1 1 100%;font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}
+.more .lbl2{flex:1 1 100%;font-size:13px;color:var(--muted)}
 .daily ul{list-style:none;margin:0;padding:0}
 .daily li label{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
 .daily li:first-child label{border-top:0}
@@ -70,9 +85,9 @@ button.soft:disabled{opacity:.4;cursor:default}
 .daily .dt strong{display:block;font-weight:600}
 .daily .dt small{color:var(--muted);font-size:13px}
 .daily li.on .dt strong{color:var(--muted);text-decoration:line-through}
-.daily input{appearance:none;width:26px;height:26px;border:2px solid var(--muted);border-radius:8px;flex:none;display:grid;place-items:center;cursor:pointer;margin:0}
-.daily input:checked{background:var(--plum);border-color:var(--plum)}
-.daily input:checked::after{content:"";width:7px;height:12px;border:solid var(--onplum);border-width:0 2.5px 2.5px 0;transform:translate(0,-1px) rotate(45deg)}
+.daily input[type=checkbox]{appearance:none;width:26px;height:26px;border:2px solid var(--muted);border-radius:8px;flex:none;display:grid;place-items:center;cursor:pointer;margin:0}
+.daily input[type=checkbox]:checked{background:var(--plum);border-color:var(--plum)}
+.daily input[type=checkbox]:checked::after{content:"";width:7px;height:12px;border:solid var(--onplum);border-width:0 2.5px 2.5px 0;transform:translate(0,-1px) rotate(45deg)}
 .daily li.first .dt strong::after{content:"#1";font-size:11px;font-weight:600;color:var(--plum);border:1px solid var(--plum);border-radius:999px;padding:0 6px;margin-left:8px;vertical-align:2px}
 .daily li.first.on .dt strong::after{opacity:.5}
 
@@ -180,7 +195,7 @@ footer{color:var(--muted);font-size:13px;text-align:center}
   <div class="view" id="viewToday">
 
   <section class="daily" aria-labelledby="dailyH">
-    <div class="daily-head"><h2 id="dailyH">Daily three</h2><span id="dailyCount"></span></div>
+    <div class="daily-head"><h2 id="dailyH">Daily</h2><span id="dailyCount"></span><button class="tip-next" id="dailyEdit" type="button">Edit</button></div>
     <ul id="daily"></ul>
   </section>
 
@@ -291,7 +306,7 @@ function newDay(){
   save();
 }
 
-/* Daily three: every day, not part of the random pick. Moving is what keeps the streak alive. */
+/* Daily list: every day, not part of the random pick. Moving is what keeps the streak alive. Editable. */
 /* Habit tips: one per day, same tip all day. "Another" peeks at the next one. */
 const TIPS=[
   ["Make it tiny.","Shrink the habit until it feels almost too easy to skip. Starting is the hard part; once you're in, you usually keep going.","BJ Fogg, Tiny Habits"],
@@ -335,29 +350,75 @@ function renderTip(){
 }
 document.getElementById("tipNext").addEventListener("click",()=>{tipOffset++;renderTip()});
 
-const DAILY=[
-  {key:"move",name:"Move",hint:"10 min counts: a walk, a run, a stretch",first:true},
+const DEFAULT_DAILY=[
+  {key:"move",name:"Move",hint:"10 min counts: a walk, a run, a stretch"},
   {key:"tidy",name:"Tidy",hint:"Your Tidy Rounds"},
   {key:"connect",name:"Connect",hint:"One text or call counts"},
+  {key:"shoot",name:"Shoot",hint:"One frame counts"},
 ];
 if(!state.dailyLog)state.dailyLog={}; // { "2026-10-21": ["move","tidy"] }
+if(!Array.isArray(state.dailyItems))state.dailyItems=DEFAULT_DAILY.map(x=>({...x}));
+const dailyName=k=>state.dailyItems.find(x=>x.key===k)?.name||({move:"Move",tidy:"Tidy",connect:"Connect",shoot:"Shoot"}[k]||k);
 const doneToday=()=>state.dailyLog[today()]||[];
+let dailyEditing=false;
 function renderDaily(){
-  const d=doneToday();
-  document.getElementById("daily").innerHTML=DAILY.map(x=>{
+  const d=doneToday(),items=state.dailyItems,el=document.getElementById("daily");
+  document.getElementById("dailyEdit").textContent=dailyEditing?"Done":"Edit";
+  if(dailyEditing){
+    el.innerHTML=items.map(x=>`<li data-key="${x.key}"><div class="dedit"><div class="fields">
+      <input data-f="name" value="${esc(x.name)}" maxlength="40" aria-label="Name">
+      <input class="h" data-f="hint" value="${esc(x.hint||"")}" maxlength="80" placeholder="What counts (optional)" aria-label="What counts"></div>
+      ${x.key==="move"?`<span class="lock">keeps streak</span>`:`<button class="x" data-act="drm" aria-label="Remove ${esc(x.name)}">×</button>`}</div></li>`).join("")
+      +`<li><form class="dadd" id="dailyAdd"><input id="dailyNew" placeholder="Add a daily" maxlength="40" aria-label="New daily"><button class="btn" type="submit">Add</button></form></li>`;
+    document.getElementById("dailyCount").textContent="";
+    return;
+  }
+  el.innerHTML=items.map(x=>{
     const on=d.includes(x.key);
-    return `<li class="${on?"on":""} ${x.first?"first":""}"><label>
+    return `<li class="${on?"on":""} ${x.key==="move"?"first":""}"><label>
       <input type="checkbox" data-key="${x.key}" ${on?"checked":""}>
-      <span class="dt"><strong>${x.name}</strong><small>${x.hint}</small></span></label></li>`}).join("");
-  document.getElementById("dailyCount").textContent=d.length===3?"All three ✦":d.includes("move")?"Moved today: good day":`${d.length} of 3`;
+      <span class="dt"><strong>${esc(x.name)}</strong>${x.hint?`<small>${esc(x.hint)}</small>`:""}</span></label></li>`}).join("");
+  const n=items.filter(x=>d.includes(x.key)).length;
+  document.getElementById("dailyCount").textContent=items.length&&n===items.length?"All done ✦":d.includes("move")?"Moved today: good day":`${n} of ${items.length}`;
 }
-document.getElementById("daily").addEventListener("change",e=>{
+const dailyEl=document.getElementById("daily");
+dailyEl.addEventListener("change",e=>{
+  if(dailyEditing){
+    const li=e.target.closest("[data-key]"),f=e.target.dataset.f;if(!li||!f)return;
+    const it=state.dailyItems.find(x=>x.key===li.dataset.key);if(!it)return;
+    const v=e.target.value.trim();
+    if(f==="name"){if(v)it.name=v;else e.target.value=it.name}else it.hint=v;
+    save();return;
+  }
   const k=e.target.dataset.key;if(!k)return;
   const set=new Set(doneToday());
   e.target.checked?set.add(k):set.delete(k);
   if(set.size)state.dailyLog[today()]=[...set];else delete state.dailyLog[today()];
   save();render();
 });
+dailyEl.addEventListener("click",e=>{
+  if(e.target.dataset.act!=="drm")return;
+  const k=e.target.closest("[data-key]").dataset.key;if(k==="move")return;
+  state.dailyItems=state.dailyItems.filter(x=>x.key!==k);save();renderDaily();
+});
+dailyEl.addEventListener("submit",e=>{
+  e.preventDefault();const v=document.getElementById("dailyNew").value.trim();if(!v)return;
+  state.dailyItems.push({key:"d"+uid(),name:v,hint:""});save();renderDaily();document.getElementById("dailyNew").focus();
+});
+document.getElementById("dailyEdit").addEventListener("click",()=>{
+  if(dailyEditing)document.activeElement?.blur?.();
+  dailyEditing=!dailyEditing;render();
+});
+
+/* Habits can carry a list of small ideas; the card suggests one. */
+const AR_IDEAS=["DM or email a vendor, planner, or venue","Post a photo or story","Follow up with a past client or ask for a review","Update your portfolio or website","Reach out to a photographer about second shooting","Comment on and engage with 5 local wedding accounts","Write a caption or blog post about a recent shoot","Research one venue you'd love to shoot at"];
+if(!state.seededAR){
+  if(!state.habits.some(h=>/a\.?richard/i.test(h.name)))
+    state.habits.push({id:uid(),name:"a.richard",mins:15,focus:false,note:"",log:[],ideas:[...AR_IDEAS]});
+  state.seededAR=true;save();
+}
+const ideaFor=h=>{const L=h.ideas||[];return L.length?L[(dayNum(today())+(h.ideaIdx||0))%L.length]:null};
+const ideaBox=h=>{const i=ideaFor(h);return i?`<div class="idea"><span>Try this</span>${esc(i)}${h.ideas.length>1?`<button data-act="idea" data-hid="${h.id}">Different idea</button>`:""}</div>`:""};
 
 function streak(){
   const days=new Set(Object.keys(state.dailyLog).filter(k=>state.dailyLog[k].includes("move")));
@@ -387,6 +448,7 @@ function bonusBlock(){
     return `<div class="bonus"><div class="eyebrow">Bonus spin</div>
       <h3>${esc(b.name)}</h3>
       <div class="mins"><button class="step" data-act="bminus" aria-label="Less time">−</button><b>${d.bonusMins} min</b><button class="step" data-act="bplus" aria-label="More time">+</button></div>
+      ${ideaBox(b)}
       ${b.note?`<div class="note"><span>Work on</span>${esc(b.note)}</div>`:""}
       <div class="actions"><button class="big" data-act="bdone">Done ✓</button><button class="soft" data-act="bskip">Not now</button></div></div>`;
   }
@@ -414,6 +476,7 @@ function renderToday(){
   el.innerHTML=`<div class="eyebrow">You drew</div>
     <h1>${esc(h.name)}</h1>
     <div class="mins"><button class="step" data-act="minus" aria-label="Less time">−</button><b>${d.mins} min</b><button class="step" data-act="plus" aria-label="More time">+</button></div>
+    ${ideaBox(h)}
     ${h.note?`<div class="note"><span>Work on</span>${esc(h.note)}</div>`:""}
     <p class="siri">Say <q>Hey Siri, set a ${d.mins}-minute timer</q> and start.</p>
     <div class="actions">
@@ -434,8 +497,9 @@ function renderHabits(){
       <div class="hname" data-act="open" role="button" tabindex="0" aria-expanded="${!!h.open}"><strong>${esc(h.name)}</strong><small>${n}× this month · last: ${ago}</small></div>
       <label class="hmins"><input type="number" inputmode="numeric" min="1" max="180" value="${h.mins}" data-act="mins" aria-label="Default minutes for ${esc(h.name)}">min</label>
       <button class="did ${on?"on":""}" data-act="did" aria-pressed="${on}" aria-label="Did ${esc(h.name)} today">✓</button>
-      ${h.open?(h.renaming?`<form class="more" data-act="renameForm"><input class="ren" value="${esc(h.name)}" aria-label="New name for ${esc(h.name)}" maxlength="60"><button class="grad" type="submit">Save</button><button type="button" data-act="renCancel">Cancel</button></form>`
-        :`<div class="more"><button data-act="rename">Rename</button><button class="grad" data-act="grad">Graduate ✦</button><button class="rm ${h.confirm?"confirm":""}" data-act="rm">${h.confirm?"Tap again to remove":"Remove"}</button></div>`):""}
+      ${h.open&&h.editIdeas?`<form class="more" data-act="ideasForm"><span class="lbl2">Small ideas, one per line. The card suggests one when this comes up.</span><textarea class="ideas" rows="5">${esc((h.ideas||[]).join("\n"))}</textarea><button class="grad" type="submit">Save</button><button type="button" data-act="ideasCancel">Cancel</button></form>`:""}
+      ${h.open&&!h.editIdeas?(h.renaming?`<form class="more" data-act="renameForm"><input class="ren" value="${esc(h.name)}" aria-label="New name for ${esc(h.name)}" maxlength="60"><button class="grad" type="submit">Save</button><button type="button" data-act="renCancel">Cancel</button></form>`
+        :`<div class="more"><button data-act="rename">Rename</button><button data-act="ideas">Ideas${h.ideas?.length?" ("+h.ideas.length+")":""}</button><button class="grad" data-act="grad">Graduate ✦</button><button class="rm ${h.confirm?"confirm":""}" data-act="rm">${h.confirm?"Tap again to remove":"Remove"}</button></div>`):""}
     </li>`}).join("");
   const g=state.habits.filter(h=>h.graduated);
   document.getElementById("gradSec").hidden=!g.length;
@@ -454,7 +518,8 @@ function render(){
 document.getElementById("today").addEventListener("click",e=>{
   const act=e.target.closest("[data-act]")?.dataset.act,d=state.day;if(!act||!d)return;
   const h=todayHabit(),b=byId(d.bonusId);
-  if(act==="minus")d.mins=Math.max(2,d.mins-5);
+  if(act==="idea"){const x=byId(e.target.dataset.hid);if(x){x.ideaIdx=(x.ideaIdx||0)+1}}
+  else if(act==="minus")d.mins=Math.max(2,d.mins-5);
   else if(act==="plus")d.mins=Math.min(180,d.mins+5);
   else if(act==="done"){logHabit(h,d.mins);d.done=d.mins}
   else if(act==="two"){logHabit(h,2);d.done=2}
@@ -481,13 +546,15 @@ habitsEl.addEventListener("click",e=>{
   const act=e.target.closest("[data-act]")?.dataset.act,h=rowHabit(e);if(!h||!act)return;
   const d=state.day;
   if(act==="star")h.focus=!h.focus;
-  else if(act==="open"){h.open=!h.open;delete h.confirm;delete h.renaming}
+  else if(act==="open"){h.open=!h.open;delete h.confirm;delete h.renaming;delete h.editIdeas}
   else if(act==="did"){
     if(loggedToday(h)){logHabit(h,0);if(d?.habitId===h.id)d.done=null}
     else{logHabit(h,h.mins);if(d?.habitId===h.id)d.done=h.mins;if(d?.bonusId===h.id)d.bonusId=null}
   }
   else if(act==="rename"){h.renaming=true;delete h.confirm;renderHabits();const i=habitsEl.querySelector(`[data-id="${h.id}"] .ren`);if(i){i.focus();i.select()}return}
   else if(act==="renCancel"){delete h.renaming}
+  else if(act==="ideas"){h.editIdeas=true;delete h.confirm;delete h.renaming}
+  else if(act==="ideasCancel"){delete h.editIdeas}
   else if(act==="grad"){h.graduated=today();delete h.open;if(d&&d.habitId===h.id&&!d.done)state.day=null}
   else if(act==="rm"){
     if(h.confirm){state.habits=state.habits.filter(x=>x!==h);if(state.day?.habitId===h.id)state.day=null}
@@ -496,6 +563,12 @@ habitsEl.addEventListener("click",e=>{
   save();render();
 });
 habitsEl.addEventListener("submit",e=>{
+  if(e.target.dataset.act==="ideasForm"){
+    e.preventDefault();const h=rowHabit(e);if(!h)return;
+    h.ideas=e.target.querySelector(".ideas").value.split("\n").map(x=>x.trim()).filter(Boolean);
+    if(!h.ideas.length)delete h.ideas;
+    delete h.editIdeas;save();render();return;
+  }
   if(e.target.dataset.act!=="renameForm")return;e.preventDefault();
   const h=rowHabit(e);if(!h)return;
   const v=e.target.querySelector(".ren").value.trim();
@@ -514,7 +587,6 @@ document.getElementById("grads").addEventListener("click",e=>{
 /* Calendar: a collection of what you did. Empty days stay blank, no "missed" marks. */
 const now0=new Date();
 let calY=now0.getFullYear(),calM=now0.getMonth(),calSel=today();
-const DAILY_NAMES={move:"Move",tidy:"Tidy",connect:"Connect"};
 function dayInfo(day){
   const daily=state.dailyLog[day]||[];
   const habits=state.habits.flatMap(h=>h.log.filter(l=>l.day===day).map(l=>({name:h.name,mins:l.mins,kind:l.kind})));
@@ -545,7 +617,8 @@ function renderCalDay(){
   let html=`<h3>${title}</h3>`;
   if(!daily.length&&!habits.length){html+=`<p class="empty">Nothing logged. Rest days are part of it too.</p>`}
   else{
-    if(daily.length)html+=`<p class="lbl">Daily three</p><ul>${["move","tidy","connect"].filter(x=>daily.includes(x)).map(x=>`<li><span>${DAILY_NAMES[x]} ✓</span></li>`).join("")}</ul>`;
+    if(daily.length){const ord=state.dailyItems.map(x=>x.key);const ks=[...daily].sort((a,b)=>(ord.indexOf(a)+99*(ord.indexOf(a)<0))-(ord.indexOf(b)+99*(ord.indexOf(b)<0)));
+      html+=`<p class="lbl">Daily</p><ul>${ks.map(x=>`<li><span>${esc(dailyName(x))} ✓</span></li>`).join("")}</ul>`}
     if(habits.length){
       const total=habits.reduce((a,h)=>a+h.mins,0);
       html+=`<p class="lbl">Habits · ${total} min</p><ul>${habits.map(h=>`<li><span>${esc(h.name)}${h.kind==="draw"?`<span class="pill">the draw</span>`:h.kind==="bonus"?`<span class="pill bonus">bonus</span>`:""}</span><small>${h.mins} min</small></li>`).join("")}</ul>`;
@@ -575,7 +648,7 @@ document.getElementById("copyBk").addEventListener("click",async()=>{
 document.getElementById("restoreBk").addEventListener("click",()=>{
   let s;try{s=JSON.parse(document.getElementById("bkText").value.trim())}catch(e){}
   if(!s||!Array.isArray(s.habits)){bkMsg("That doesn't look like a backup.");return}
-  state=s;if(!state.dailyLog)state.dailyLog={};
+  state=s;if(!state.dailyLog)state.dailyLog={};if(!Array.isArray(state.dailyItems))state.dailyItems=DEFAULT_DAILY.map(x=>({...x}));
   save();document.getElementById("bkText").value="";render();bkMsg("Restored ✦");
 });
 
