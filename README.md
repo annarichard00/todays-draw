@@ -17,6 +17,7 @@ One habit or hobby a day, drawn for you, so you don't have to decide. Open it, s
 - "I kept going" adds 10 more minutes to today's log
 - After you finish, jot what to work on next time; it shows up the next time that habit comes up
 - **Calendar** tab: a month view with a dot for days you moved and a ✦ for each habit; tap a day to see what you did (no "missed" marks, ever)
+- **Habit tip** of the day: 30 research-backed tips that rotate daily (tap Another for more)
 - Streak, days this month, and how often you've done each habit
 - Everything saves on the device; **Backup & restore** at the bottom lets you copy it out and paste it back (for re-adding the app or a new phone)
 

@@ -77,6 +77,13 @@ button.soft:disabled{opacity:.4;cursor:default}
 .daily li.first.on .dt strong::after{opacity:.5}
 
 /* stats */
+.tip{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--apricot);border-radius:16px;padding:14px 16px}
+.tip-head{display:flex;justify-content:space-between;align-items:center}
+.tip-next{background:none;border:0;font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;padding:4px 0}
+.tip-title{font-family:var(--display);font-weight:500;font-size:20px;line-height:1.25;margin:6px 0 6px;text-wrap:balance}
+.tip-body{margin:0;font-size:15px}
+.tip-src{margin:8px 0 0;font-size:12px;color:var(--muted)}
+.tip-src:empty{display:none}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .stat b{display:block;font-family:var(--display);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -179,6 +186,13 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 
   <section class="today" id="today" aria-live="polite"></section>
 
+  <section class="tip" aria-labelledby="tipH">
+    <div class="tip-head"><div class="eyebrow" id="tipH">Habit tip</div><button class="tip-next" id="tipNext" type="button">Another ›</button></div>
+    <p class="tip-title" id="tipTitle"></p>
+    <p class="tip-body" id="tipBody"></p>
+    <p class="tip-src" id="tipSrc"></p>
+  </section>
+
   <div class="stats">
     <div class="stat"><b id="streak">0</b><small>day move streak</small></div>
     <div class="stat"><b id="month">0</b><small>draw days this month</small></div>
@@ -278,6 +292,49 @@ function newDay(){
 }
 
 /* Daily three: every day, not part of the random pick. Moving is what keeps the streak alive. */
+/* Habit tips: one per day, same tip all day. "Another" peeks at the next one. */
+const TIPS=[
+  ["Make it tiny.","Shrink the habit until it feels almost too easy to skip. Starting is the hard part; once you're in, you usually keep going.","BJ Fogg, Tiny Habits"],
+  ["Plan the when and where.","\"After dinner, I'll do 10 minutes of Ableton at my desk.\" A specific if-then plan makes you noticeably more likely to follow through than a vague intention.","Gollwitzer & Sheeran, implementation intentions research"],
+  ["Stack it on something you already do.","Attach the new habit to an old one: after I make coffee, I do breathwork. The old habit becomes the reminder.","BJ Fogg, Tiny Habits"],
+  ["It takes longer than 21 days.","In one well-known study, habits took a median of about 66 days to feel automatic, with a huge range. If it still feels like effort at week three, that's normal.","Lally et al., 2010"],
+  ["Missing a day doesn't break it.","In that same study, a single missed day had no real effect on forming the habit. What matters is getting back to it.","Lally et al., 2010"],
+  ["Never miss twice.","One off day is life. Two in a row starts a new pattern. If you skipped yesterday, today's version can be the 2-minute one.","James Clear, Atomic Habits"],
+  ["Make it easy to start.","Leave the flowstar by the door, the controller plugged in, the book on your pillow. Removing even small steps makes a habit far more likely.","Wendy Wood, Good Habits, Bad Habits"],
+  ["Add friction to what pulls you away.","Phone in another room while you practice. Making distractions a little harder works better than resisting them.","Wendy Wood, Good Habits, Bad Habits"],
+  ["Willpower is overrated.","People who seem disciplined mostly have routines and setups that mean they need less willpower, not more.","Wendy Wood; Galla & Duckworth, 2015"],
+  ["Short and often beats long and rare.","Your brain consolidates practice between sessions, especially during sleep. Four 15-minute sessions usually teach more than one hour-long cram.","Spacing effect research; Walker et al., 2002"],
+  ["Practice one specific thing.","Ten focused minutes on one transition or one move beats an hour of noodling. Use the \"Next time, work on\" box to pick it.","Ericsson, deliberate practice research"],
+  ["Pair it with something you love.","Only listen to your favorite podcast during meal prep. Bundling a treat with the habit makes you want to show up.","Milkman et al., temptation bundling"],
+  ["Use fresh starts.","Mondays, the first of the month, and birthdays are natural moments to restart. A rough week doesn't matter; the next fresh start is close.","Dai, Milkman & Riis, 2014"],
+  ["Be kind to yourself after a slip.","Self-compassion after a setback makes people more likely to try again, not less. Beating yourself up mostly makes you avoid the thing.","Breines & Chen, 2012"],
+  ["Celebrate right away.","A tiny cheer, a fist pump, a checkmark. A good feeling right after the action helps wire it in.","BJ Fogg, Tiny Habits"],
+  ["Think about who you're becoming.","\"I'm someone who moves every day\" sticks better than \"I should exercise.\" Each check-off is a vote for that person.","James Clear, Atomic Habits"],
+  ["Same time, same place.","Habits form fastest when the cue is consistent. If you can, do your draw at roughly the same time each day.","Wendy Wood; Lally et al., 2010"],
+  ["Lower the bar on bad days.","The 2-minute version still counts. It keeps the cue and the routine alive, which is the part that becomes automatic.","Habit formation research"],
+  ["Don't wait to feel motivated.","Motivation often shows up after you start, not before. Begin, and let the feeling catch up.","Behavioral activation research"],
+  ["Track it where you can see it.","Seeing your progress (hi, calendar tab) is motivating and keeps you honest. Just don't let a blank day turn into a guilt trip.","Harkin et al., 2016, progress monitoring meta-analysis"],
+  ["Know your 'why.'","Habits you do because they matter to you or feel good tend to last longer than ones you do because you \"should.\"","Self-determination theory, Ryan & Deci"],
+  ["Make it social.","Practicing with someone, or just telling a friend what you're working on, adds a little accountability and a lot of fun.","Social support and accountability research"],
+  ["Prepare for obstacles.","Picture what might stop you, then plan around it: \"If I'm too tired after work, I'll do 5 minutes of breathwork instead.\"","Oettingen, WOOP / mental contrasting"],
+  ["Rest is part of practice.","Getting better happens partly while you recover and sleep. Rest days are not lost days.","Motor learning and sleep research"],
+  ["Progress isn't a straight line.","Plateaus are normal when learning a skill. Often you're improving in ways you can't see yet.","Skill acquisition research"],
+  ["Small wins snowball.","Each small success makes the next one feel more possible. That's the whole idea behind one draw a day.","Teresa Amabile, The Progress Principle"],
+  ["Decide less.","Every decision costs a little energy. Letting the app pick saves that for the actual doing.","Choice overload research"],
+  ["Curiosity beats pressure.","Approach practice like an experiment: \"What happens if I try it this way?\" Curiosity keeps hobbies feeling like hobbies.","Intrinsic motivation research"],
+  ["Rewards help early, then fade.","An external reward can get a habit going, but the long-term goal is enjoying the activity itself.","Woolley & Fishbach, 2017"],
+  ["Keep a beginner's list.","Write down small things you can do now that you couldn't a month ago. It's easy to forget how far you've come.","Progress monitoring research"],
+];
+const dayNum=d=>Math.floor(new Date(d+"T12:00")/864e5);
+let tipOffset=0;
+function renderTip(){
+  const [t,b,src]=TIPS[(dayNum(today())+tipOffset)%TIPS.length];
+  document.getElementById("tipTitle").textContent=t;
+  document.getElementById("tipBody").textContent=b;
+  document.getElementById("tipSrc").textContent=src?"From: "+src:"";
+}
+document.getElementById("tipNext").addEventListener("click",()=>{tipOffset++;renderTip()});
+
 const DAILY=[
   {key:"move",name:"Move",hint:"10 min counts: a walk, a run, a stretch",first:true},
   {key:"tidy",name:"Tidy",hint:"Your Tidy Rounds"},
@@ -388,7 +445,7 @@ function renderHabits(){
 function render(){
   newDay();
   document.getElementById("date").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
-  renderDaily();renderToday();renderHabits();
+  renderDaily();renderToday();renderHabits();renderTip();
   document.getElementById("streak").textContent=streak();
   document.getElementById("month").textContent=monthCount();
   if(!document.getElementById("viewCal").hidden)renderCal();
