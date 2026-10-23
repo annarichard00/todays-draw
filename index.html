@@ -413,8 +413,8 @@ document.getElementById("dailyEdit").addEventListener("click",()=>{
 /* Habits can carry a list of small ideas; the card suggests one. */
 const AR_IDEAS=["DM or email a vendor, planner, or venue","Post a photo or story","Follow up with a past client or ask for a review","Update your portfolio or website","Reach out to a photographer about second shooting","Comment on and engage with 5 local wedding accounts","Write a caption or blog post about a recent shoot","Research one venue you'd love to shoot at"];
 if(!state.seededAR){
-  if(!state.habits.some(h=>/a\.?richard/i.test(h.name)))
-    state.habits.push({id:uid(),name:"a.richard",mins:15,focus:false,note:"",log:[],ideas:[...AR_IDEAS]});
+  if(!state.habits.some(h=>/a\.?richard|career/i.test(h.name)))
+    state.habits.push({id:uid(),name:"Career",mins:15,focus:false,note:"",log:[],ideas:[...AR_IDEAS]});
   state.seededAR=true;save();
 }
 const ideaFor=h=>{const L=h.ideas||[];return L.length?L[(dayNum(today())+(h.ideaIdx||0))%L.length]:null};
