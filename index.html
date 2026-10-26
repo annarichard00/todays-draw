@@ -302,7 +302,7 @@ function newDay(){
     return;
   }
   const h=pick();
-  state.day=h?{date:today(),habitId:h.id,mins:h.mins,rerolled:false,done:null,bonusId:null}:null;
+  state.day=h?{date:today(),habitId:h.id,mins:h.mins,done:null,bonusId:null}:null;
   save();
 }
 
@@ -482,7 +482,6 @@ function renderToday(){
     <div class="actions">
       <button class="big" data-act="done">Done ✓</button>
       <button class="soft" data-act="two">Rough day: did 2 min</button>
-      <button class="soft" data-act="reroll" ${d.rerolled||!pick(d.habitId)?"disabled":""}>${d.rerolled?"Re-roll used":"Re-roll (1 left)"}</button>
     </div>`;
 }
 
@@ -524,7 +523,6 @@ document.getElementById("today").addEventListener("click",e=>{
   else if(act==="done"){logHabit(h,d.mins);d.done=d.mins}
   else if(act==="two"){logHabit(h,2);d.done=2}
   else if(act==="more"){d.done+=10;logHabit(h,d.done)}
-  else if(act==="reroll"&&!d.rerolled){const n=pick(d.habitId);if(n){state.day={...d,habitId:n.id,mins:n.mins,rerolled:true}}}
   else if(act==="undo"){logHabit(h,0);d.done=null}
   else if(act==="bonus"){const n=pick(d.habitId);if(n){d.bonusId=n.id;d.bonusMins=n.mins}}
   else if(act==="bminus")d.bonusMins=Math.max(2,d.bonusMins-5);
