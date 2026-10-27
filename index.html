@@ -107,6 +107,7 @@ button.soft:disabled{opacity:.4;cursor:default}
 /* habits list */
 h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0 0 4px}
 .hint{color:var(--muted);font-size:14px;margin:0 0 10px}
+.focus-msg{color:var(--plum);font-weight:600}
 .habits{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .habits li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
 .habits li:first-child{border-top:0}
@@ -215,7 +216,8 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 
   <section>
     <h2>Your habits</h2>
-    <p class="hint">Habits you've done least lately come up first (ties go to whatever you did longest ago). ★ = focus: counts as half as many times, so it comes up more. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
+    <p class="hint">Habits you've done least lately come up first (ties go to whatever you did longest ago). ★ = focus (pick up to 2): counts as half as many times, so it comes up more. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
+    <p class="hint focus-msg" id="focusMsg" role="status" hidden></p>
     <ul class="habits" id="habits"></ul>
     <form class="add" id="addForm">
       <input id="newName" placeholder="Add a habit" aria-label="New habit name">
@@ -545,7 +547,13 @@ const rowHabit=e=>byId(e.target.closest("[data-id]")?.dataset.id);
 habitsEl.addEventListener("click",e=>{
   const act=e.target.closest("[data-act]")?.dataset.act,h=rowHabit(e);if(!h||!act)return;
   const d=state.day;
-  if(act==="star")h.focus=!h.focus;
+  if(act==="star"){
+    if(!h.focus&&active().filter(x=>x.focus).length>=2){
+      const m=document.getElementById("focusMsg");m.textContent="Only 2 focus habits at a time. Un-star one first.";m.hidden=false;
+      clearTimeout(window._fm);window._fm=setTimeout(()=>{m.hidden=true},3500);return;
+    }
+    h.focus=!h.focus;
+  }
   else if(act==="open"){h.open=!h.open;delete h.confirm;delete h.renaming;delete h.editIdeas}
   else if(act==="did"){
     if(loggedToday(h)){logHabit(h,0);if(d?.habitId===h.id)d.done=null}
