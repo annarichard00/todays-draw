@@ -215,7 +215,7 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 
   <section>
     <h2>Your habits</h2>
-    <p class="hint">★ = focus: comes up about twice as often. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
+    <p class="hint">Habits you've done least lately come up first. ★ = focus: counts as half as many times, so it comes up more. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
     <ul class="habits" id="habits"></ul>
     <form class="add" id="addForm">
       <input id="newName" placeholder="Add a habit" aria-label="New habit name">
@@ -278,21 +278,23 @@ const lastDone=h=>h.log.length?h.log[h.log.length-1].day:null;
 const active=()=>state.habits.filter(h=>!h.graduated);
 const loggedToday=h=>h.log.some(l=>l.day===today());
 
-/* Weighted pick: the longer since you last did it, the likelier (caps at 2 weeks).
-   Never-done habits count as 2 weeks. Focus habits get double weight.
+/* Fairness first: the habits you've done the FEWEST times in the last 30 days get drawn before the rest.
+   Never-done habits (including brand-new ones) count as zero, so they always come first.
+   A ★ focus habit counts as half as many times, so it gets drawn a bit more often than the rest.
+   Among habits tied for fewest, the one you haven't done for longest is likelier.
    Skips graduated habits and anything already done today. */
+const recentCount=h=>{const t=today();return h.log.filter(l=>daysBetween(l.day,t)<30).length};
 function pick(excludeId){
   const pool=active().filter(h=>h.id!==excludeId&&!loggedToday(h));
   if(!pool.length)return null;
   const t=today();
-  const w=pool.map(h=>{
-    const ld=lastDone(h);
-    const since=ld?Math.min(daysBetween(ld,t),14):14;
-    return (since+1)*(h.focus?2:1);
-  });
-  let r=Math.random()*w.reduce((a,b)=>a+b,0);
-  for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}
-  return pool[pool.length-1];
+  const score=h=>recentCount(h)/(h.focus?2:1);
+  const low=Math.min(...pool.map(score));
+  const tied=pool.filter(h=>score(h)===low);
+  const w=tied.map(h=>{const ld=lastDone(h);return (ld?Math.min(daysBetween(ld,t),30):30)+1});
+  let r=Math.random()*w.reduce((x,y)=>x+y,0);
+  for(let i=0;i<tied.length;i++){r-=w[i];if(r<=0)return tied[i]}
+  return tied[tied.length-1];
 }
 
 function newDay(){

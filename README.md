@@ -6,8 +6,8 @@ One habit or hobby a day, drawn for you, so you don't have to decide. Open it, s
 
 - **Daily** list at the top: Move (#1), Tidy, Connect, Shoot. Check them off every day; they're not part of the random pick. Tap **Edit** to rename, add, or remove them (Move stays, since it keeps the streak)
 - Moving is what keeps your streak alive, so a rough day where you only moved still counts
-- Picks one habit each day. The longer since you last did something, the likelier it comes up, so nothing gets forgotten
-- ★ Focus habits come up about twice as often (star the 1–2 you most want to get better at)
+- Picks one habit each day, fairly: whatever you've done the fewest times in the last 30 days gets drawn first (never-done habits always come first; ties go to whatever has waited longest)
+- ★ Focus habits count as half as many times, so they come up a bit more often (star the 1–2 you most want to get better at)
 - No re-rolls: whatever you draw is today's thing
 - Habits can have **Ideas**: a list of small actions, and the card suggests one when that habit comes up (Career comes with photography career ideas)
 - After you finish, an optional **bonus spin** picks another one (as many as you want)
