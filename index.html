@@ -215,7 +215,7 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 
   <section>
     <h2>Your habits</h2>
-    <p class="hint">Habits you've done least lately come up first. ★ = focus: counts as half as many times, so it comes up more. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
+    <p class="hint">Habits you've done least lately come up first (ties go to whatever you did longest ago). ★ = focus: counts as half as many times, so it comes up more. ✓ = did it today, even if it wasn't the pick. Tap a name to rename, graduate, or remove it.</p>
     <ul class="habits" id="habits"></ul>
     <form class="add" id="addForm">
       <input id="newName" placeholder="Add a habit" aria-label="New habit name">
@@ -274,27 +274,27 @@ try{state=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!state||!Array.isArray(state.habits))state=seed();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
 
-const lastDone=h=>h.log.length?h.log[h.log.length-1].day:null;
+const lastDone=h=>h.log.reduce((m,l)=>l.day>m?l.day:m,"")||null; // most recent day, whatever order the log is in
 const active=()=>state.habits.filter(h=>!h.graduated);
 const loggedToday=h=>h.log.some(l=>l.day===today());
 
-/* Fairness first: the habits you've done the FEWEST times in the last 30 days get drawn before the rest.
+/* Fairness first, no dice: draw the habit you've done the FEWEST times in the last 30 days.
    Never-done habits (including brand-new ones) count as zero, so they always come first.
    A ★ focus habit counts as half as many times, so it gets drawn a bit more often than the rest.
-   Among habits tied for fewest, the one you haven't done for longest is likelier.
+   If several are tied for fewest, whichever was done LONGEST AGO goes first (never-done = longest).
+   Only when they're still tied (same last day) does it pick randomly among them.
    Skips graduated habits and anything already done today. */
 const recentCount=h=>{const t=today();return h.log.filter(l=>daysBetween(l.day,t)<30).length};
 function pick(excludeId){
   const pool=active().filter(h=>h.id!==excludeId&&!loggedToday(h));
   if(!pool.length)return null;
-  const t=today();
   const score=h=>recentCount(h)/(h.focus?2:1);
   const low=Math.min(...pool.map(score));
   const tied=pool.filter(h=>score(h)===low);
-  const w=tied.map(h=>{const ld=lastDone(h);return (ld?Math.min(daysBetween(ld,t),30):30)+1});
-  let r=Math.random()*w.reduce((x,y)=>x+y,0);
-  for(let i=0;i<tied.length;i++){r-=w[i];if(r<=0)return tied[i]}
-  return tied[tied.length-1];
+  const last=h=>lastDone(h)||"0000-00-00";           // never done sorts as longest ago
+  const oldest=tied.reduce((m,h)=>last(h)<m?last(h):m,last(tied[0]));
+  const finalists=tied.filter(h=>last(h)===oldest);
+  return finalists[Math.floor(Math.random()*finalists.length)];
 }
 
 function newDay(){
