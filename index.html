@@ -66,11 +66,14 @@ button.soft:disabled{opacity:.4;cursor:default}
 .daily-head{align-items:center}
 .dedit{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .daily li:first-child .dedit{border-top:0}
+.dedit .arrows{display:flex;flex-direction:column;gap:4px;flex:none}
+.dedit .arrows button{width:34px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:12px;cursor:pointer;padding:0;line-height:1}
+.dedit .arrows button:disabled{opacity:.3;cursor:default}
 .dedit .fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .dedit input{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
 .dedit input.h{font-size:13px;color:var(--muted)}
-.dedit .x{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer;padding:2px 8px;line-height:1;width:44px}
-.dedit .lock{font-size:11px;line-height:1.2;color:var(--muted);width:44px;text-align:center;flex:none}
+.dedit .x{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer;padding:2px 4px;line-height:1;width:36px}
+.dedit .lock{font-size:11px;line-height:1.2;color:var(--muted);width:36px;text-align:center;flex:none}
 .dadd{display:flex;gap:8px;padding:10px 0 6px;border-top:1px solid var(--line)}
 .dadd input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .idea{background:var(--apricot);color:#2b1a24;border-radius:12px;padding:10px 12px;font-size:15px;display:flex;flex-direction:column;gap:6px}
@@ -369,7 +372,9 @@ function renderDaily(){
   const d=doneToday(),items=state.dailyItems,el=document.getElementById("daily");
   document.getElementById("dailyEdit").textContent=dailyEditing?"Done":"Edit";
   if(dailyEditing){
-    el.innerHTML=items.map(x=>`<li data-key="${x.key}"><div class="dedit"><div class="fields">
+    el.innerHTML=items.map((x,i)=>`<li data-key="${x.key}"><div class="dedit"><div class="arrows">
+      <button type="button" data-act="dup" aria-label="Move ${esc(x.name)} up" ${i===0?"disabled":""}>▲</button>
+      <button type="button" data-act="ddown" aria-label="Move ${esc(x.name)} down" ${i===items.length-1?"disabled":""}>▼</button></div><div class="fields">
       <input data-f="name" value="${esc(x.name)}" maxlength="40" aria-label="Name">
       <input class="h" data-f="hint" value="${esc(x.hint||"")}" maxlength="80" placeholder="What counts (optional)" aria-label="What counts"></div>
       ${x.key==="move"?`<span class="lock">keeps streak</span>`:`<button class="x" data-act="drm" aria-label="Remove ${esc(x.name)}">×</button>`}</div></li>`).join("")
@@ -377,9 +382,9 @@ function renderDaily(){
     document.getElementById("dailyCount").textContent="";
     return;
   }
-  el.innerHTML=items.map(x=>{
+  el.innerHTML=items.map((x,i)=>{
     const on=d.includes(x.key);
-    return `<li class="${on?"on":""} ${x.key==="move"?"first":""}"><label>
+    return `<li class="${on?"on":""} ${i===0?"first":""}"><label>
       <input type="checkbox" data-key="${x.key}" ${on?"checked":""}>
       <span class="dt"><strong>${esc(x.name)}</strong>${x.hint?`<small>${esc(x.hint)}</small>`:""}</span></label></li>`}).join("");
   const n=items.filter(x=>d.includes(x.key)).length;
@@ -401,9 +406,19 @@ dailyEl.addEventListener("change",e=>{
   save();render();
 });
 dailyEl.addEventListener("click",e=>{
-  if(e.target.dataset.act!=="drm")return;
-  const k=e.target.closest("[data-key]").dataset.key;if(k==="move")return;
-  state.dailyItems=state.dailyItems.filter(x=>x.key!==k);save();renderDaily();
+  const btn=e.target.closest("[data-act]"),act=btn?.dataset.act;if(!act)return;
+  const li=btn.closest("[data-key]");if(!li)return;
+  const k=li.dataset.key,L=state.dailyItems,i=L.findIndex(x=>x.key===k);if(i<0)return;
+  if(act==="drm"){if(k==="move")return;state.dailyItems=L.filter(x=>x.key!==k)}
+  else if(act==="dup"&&i>0){[L[i-1],L[i]]=[L[i],L[i-1]]}
+  else if(act==="ddown"&&i<L.length-1){[L[i+1],L[i]]=[L[i],L[i+1]]}
+  else return;
+  save();renderDaily();
+  if(act!=="drm"){ // keep the arrow you just used in view and focused so you can tap it again
+    const again=dailyEl.querySelector(`[data-key="${k}"] [data-act="${act}"]:not([disabled])`)||dailyEl.querySelector(`[data-key="${k}"] [data-act]`);
+    again?.focus({preventScroll:true});
+    dailyEl.querySelector(`[data-key="${k}"]`)?.scrollIntoView({block:"nearest"});
+  }
 });
 dailyEl.addEventListener("submit",e=>{
   e.preventDefault();const v=document.getElementById("dailyNew").value.trim();if(!v)return;
