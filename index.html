@@ -69,6 +69,7 @@ button.soft:disabled{opacity:.4;cursor:default}
 .dedit .arrows{display:flex;flex-direction:column;gap:4px;flex:none}
 .dedit .arrows button{width:34px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:12px;cursor:pointer;padding:0;line-height:1}
 .dedit .arrows button:disabled{opacity:.3;cursor:default}
+.dfull{margin:0;padding:10px 4px 6px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 .dedit .fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .dedit input{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
 .dedit input.h{font-size:13px;color:var(--muted)}
@@ -357,11 +358,11 @@ function renderTip(){
 }
 document.getElementById("tipNext").addEventListener("click",()=>{tipOffset++;renderTip()});
 
+const MAX_DAILY=3; // keep the daily list short on purpose
 const DEFAULT_DAILY=[
   {key:"move",name:"Move",hint:"10 min counts: a walk, a run, a stretch"},
-  {key:"tidy",name:"Tidy",hint:"Your Tidy Rounds"},
-  {key:"connect",name:"Connect",hint:"One text or call counts"},
   {key:"shoot",name:"Shoot",hint:"One frame counts"},
+  {key:"vitamins",name:"Vitamins",hint:"Multivitamin counts"},
 ];
 if(!state.dailyLog)state.dailyLog={}; // { "2026-10-21": ["move","tidy"] }
 if(!Array.isArray(state.dailyItems))state.dailyItems=DEFAULT_DAILY.map(x=>({...x}));
@@ -378,7 +379,9 @@ function renderDaily(){
       <input data-f="name" value="${esc(x.name)}" maxlength="40" aria-label="Name">
       <input class="h" data-f="hint" value="${esc(x.hint||"")}" maxlength="80" placeholder="What counts (optional)" aria-label="What counts"></div>
       ${x.key==="move"?`<span class="lock">keeps streak</span>`:`<button class="x" data-act="drm" aria-label="Remove ${esc(x.name)}">×</button>`}</div></li>`).join("")
-      +`<li><form class="dadd" id="dailyAdd"><input id="dailyNew" placeholder="Add a daily" maxlength="40" aria-label="New daily"><button class="btn" type="submit">Add</button></form></li>`;
+      +(items.length>=MAX_DAILY
+        ?`<li><p class="dfull" role="status">${items.length>MAX_DAILY?`Max is ${MAX_DAILY}, and you have ${items.length}. Remove ${items.length-MAX_DAILY} to add a new one.`:`That's ${MAX_DAILY}, the max. Remove one to add a different one.`}</p></li>`
+        :`<li><form class="dadd" id="dailyAdd"><input id="dailyNew" placeholder="Add a daily" maxlength="40" aria-label="New daily"><button class="btn" type="submit">Add</button></form></li>`);
     document.getElementById("dailyCount").textContent="";
     return;
   }
@@ -422,7 +425,8 @@ dailyEl.addEventListener("click",e=>{
 });
 dailyEl.addEventListener("submit",e=>{
   e.preventDefault();const v=document.getElementById("dailyNew").value.trim();if(!v)return;
-  state.dailyItems.push({key:"d"+uid(),name:v,hint:""});save();renderDaily();document.getElementById("dailyNew").focus();
+  if(state.dailyItems.length>=MAX_DAILY)return;
+  state.dailyItems.push({key:"d"+uid(),name:v,hint:""});save();renderDaily();document.getElementById("dailyNew")?.focus();
 });
 document.getElementById("dailyEdit").addEventListener("click",()=>{
   if(dailyEditing)document.activeElement?.blur?.();

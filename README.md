@@ -4,7 +4,7 @@ One habit or hobby a day, drawn for you, so you don't have to decide. Open it, s
 
 ## What it does
 
-- **Daily** list at the top: Move (#1), Tidy, Connect, Shoot. Check them off every day; they're not part of the random pick. Tap **Edit** to rename, add, remove, or reorder them with the ▲▼ arrows, most important first (Move can't be removed, since it keeps the streak)
+- **Daily** list at the top, capped at 3 on purpose (default: Move, Shoot, Vitamins). Check them off every day; they're not part of the random pick. Tap **Edit** to rename, add, remove, or reorder them with the ▲▼ arrows, most important first (Move can't be removed, since it keeps the streak)
 - Moving is what keeps your streak alive, so a rough day where you only moved still counts
 - Picks one habit each day, fairly: whatever you've done the fewest times in the last 30 days gets drawn first (never-done habits always come first; if several are tied, whichever you did longest ago goes first)
 - ★ Focus habits count as half as many times, so they come up a bit more often (you can star up to 2 at a time, so the star stays meaningful)
